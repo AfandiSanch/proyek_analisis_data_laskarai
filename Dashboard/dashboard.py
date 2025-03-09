@@ -58,7 +58,25 @@ if page == "Home":
 # Statistik Deskriptif
 elif page == "Statistik Deskriptif":
     st.title("📊 Statistik Deskriptif")
+    
+    # Menampilkan tabel statistik deskriptif
     st.write(data_combined.describe())
+    
+    # Menambahkan penjelasan di bawah tabel
+    st.write("### 📌 Interpretasi Statistik Deskriptif")
+    st.write("""
+    **Tren Polusi Udara (PM2.5, PM10) dari Waktu ke Waktu**
+    - Jika rata-rata PM2.5 dan PM10 tinggi dengan standar deviasi besar, kemungkinan ada fluktuasi besar dalam tingkat polusi.
+    - Jika median dan mean berbeda jauh, distribusi data mungkin tidak simetris, menunjukkan adanya lonjakan polusi pada periode tertentu.
+    - Rentang nilai (min-max) menunjukkan variasi besar antara hari-hari dengan polusi rendah dan tinggi.
+
+    **Pengaruh Curah Hujan (RAIN) dan Kecepatan Angin (WSPM) terhadap PM2.5**
+    - Jika rata-rata PM2.5 lebih rendah saat curah hujan tinggi, ini menunjukkan bahwa hujan membantu mengurangi polusi udara.
+    - Jika kecepatan angin tinggi berkorelasi dengan rendahnya PM2.5, angin mungkin membantu menyebarkan polutan.
+    - Jika standar deviasi WSPM tinggi, berarti kecepatan angin bervariasi, yang bisa memengaruhi distribusi polusi udara.
+    """)
+
+
 
 # Visualisasi
 elif page == "Visualisasi":
