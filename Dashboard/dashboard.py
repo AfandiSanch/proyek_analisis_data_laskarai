@@ -1,9 +1,12 @@
+import os
+import requests
 import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import geopandas as gpd
+from shapely.geometry import Point
 from sklearn.preprocessing import KBinsDiscretizer
 
 # URL dataset
@@ -101,10 +104,17 @@ elif page == "Peta PM2.5":
     gdf = gpd.GeoDataFrame(data_geo, geometry=gpd.points_from_xy(data_geo.longitude, data_geo.latitude))
 
     # Gantilah dengan path shapefile lokal jika ada
-    shapefile_path = "https://raw.githubusercontent.com/AfandiSanch/proyek_analisis_data_laskarai/6ecd78a38c9ce4a2101f98edffc5f43daa34e38c/110m_cultural
-/ne_110m_admin_0_countries.shp"
+    shapefile_path = "https://raw.githubusercontent.com/AfandiSanch/proyek_analisis_data_laskarai/main/ne_110m_admin_0_countries.shp"
 
-    if shapefile_path and gpd.io.file.exists(shapefile_path):
+    def check_shapefile_exists(url):
+        """Memeriksa apakah shapefile tersedia"""
+        try:
+            response = requests.head(url)
+            return response.status_code == 200
+        except requests.RequestException:
+            return False
+
+    if check_shapefile_exists(shapefile_path):
         world = gpd.read_file(shapefile_path)
         fig, ax = plt.subplots(figsize=(10, 10))
         world.boundary.plot(ax=ax, linewidth=1, color="black")
@@ -113,5 +123,5 @@ elif page == "Peta PM2.5":
         plt.ylabel("Latitude")
         st.pyplot(fig)
     else:
-        st.error("File Shapefile tidak ditemukan. Pastikan Anda menggunakan path lokal yang benar!")
+        st.error("File Shapefile tidak ditemukan. Pastikan URL atau path lokal benar!")
 
