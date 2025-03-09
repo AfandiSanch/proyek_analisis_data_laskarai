@@ -101,7 +101,8 @@ elif page == "Peta PM2.5":
     gdf = gpd.GeoDataFrame(data_geo, geometry=gpd.points_from_xy(data_geo.longitude, data_geo.latitude))
 
     # Gantilah dengan path shapefile lokal jika ada
-    shapefile_path = "/mount/src/proyek_analisis_data_laskarai/110m_cultural/ne_110m_admin_0_countries.shp"
+    shapefile_path = "https://raw.githubusercontent.com/AfandiSanch/proyek_analisis_data_laskarai/6ecd78a38c9ce4a2101f98edffc5f43daa34e38c/110m_cultural
+/ne_110m_admin_0_countries.shp"
 
     if shapefile_path and gpd.io.file.exists(shapefile_path):
         world = gpd.read_file(shapefile_path)
