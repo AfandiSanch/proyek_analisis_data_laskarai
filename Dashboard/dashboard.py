@@ -37,8 +37,13 @@ page = st.sidebar.radio("Pilih Halaman:", ["Home", "Statistik Deskriptif", "Visu
 # Home
 if page == "Home":
     st.title("📊 Analisis Kualitas Udara Beijing")
-    st.write("### Contoh Data (5 baris pertama dari dataset gabungan)")
-    st.dataframe(data_combined.head(5))
+    st.write("### Contoh Data (5 baris per station)")
+    
+    # Ambil 5 baris per station
+    sample_data = data_combined.groupby('station').head(5).reset_index(drop=True)
+    
+    st.dataframe(sample_data)
+
 
 # Statistik Deskriptif
 elif page == "Statistik Deskriptif":
