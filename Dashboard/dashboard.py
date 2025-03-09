@@ -133,6 +133,34 @@ elif page == "Analisis RFM":
     ).reset_index()
     st.dataframe(rfm)
 
+     # Menambahkan penjelasan di bawah tabel
+    st.write("### 📌 Penjelasan Analisis RFM dalam Konteks Polusi Udara")
+    st.write("""
+    Dalam analisis polusi udara, konsep **Recency, Frequency, Monetary (RFM)** bisa diadaptasi sebagai berikut:
+
+    1. **Recency (R) – Seberapa Baru Terjadinya Polusi**
+       - Recency mengacu pada waktu terakhir kali tingkat polusi udara tinggi (PM2.5 dan PM10).
+       - Jika ada jeda panjang sejak polusi terakhir kali tinggi, ini bisa menunjukkan perbaikan kualitas udara atau pengaruh faktor lingkungan seperti hujan dan angin.
+
+    2. **Frequency (F) – Seberapa Sering Polusi Terjadi**
+       - Frequency menunjukkan seberapa sering suatu stasiun pemantauan mendeteksi polusi udara dalam rentang waktu tertentu.
+       - Jika suatu stasiun memiliki frekuensi tinggi dalam mendeteksi PM2.5 dan PM10 di atas ambang batas, ini bisa menunjukkan daerah tersebut rawan polusi.
+
+    3. **Monetary (M) – Seberapa Parah Dampak Polusi**
+       - Monetary dalam konteks ini bisa diartikan sebagai tingkat keparahan polusi berdasarkan rata-rata konsentrasi PM2.5 dan PM10.
+       - Semakin tinggi nilai Monetary, semakin besar bahaya polusi bagi kesehatan masyarakat.
+
+    ### 🔍 Analisis Pertanyaan:
+    1. **Bagaimana Tren Polusi Udara (PM2.5, PM10) dari Waktu ke Waktu?**
+       - Polusi udara bervariasi di setiap stasiun pemantauan.
+       - Polusi bisa meningkat pada musim dingin karena efek pemanasan rumah tangga dan penurunan kecepatan angin.
+       - Curah hujan membantu mengurangi konsentrasi PM2.5 dan PM10.
+
+    2. **Bagaimana Pengaruh Curah Hujan (RAIN) dan Kecepatan Angin (WSPM) terhadap Polusi Udara?**
+       - Polusi cenderung lebih rendah saat curah hujan tinggi karena hujan membersihkan partikel polusi dari udara.
+       - Kecepatan angin yang tinggi membantu menyebarkan polusi, mengurangi konsentrasi PM2.5 dan PM10 di satu lokasi tertentu.
+    """)
+
 # Peta PM2.5
 elif page == "Peta PM2.5":
     st.title("🌍 Distribusi PM2.5 berdasarkan Lokasi")
