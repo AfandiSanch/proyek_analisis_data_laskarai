@@ -202,3 +202,32 @@ elif page == "Peta PM2.5":
         ).add_to(m)
 
     folium_static(m)
+
+    # Menampilkan tabel ringkasan PM2.5 per lokasi
+    pm25_summary = data_combined.groupby("station")["PM2.5"].mean().reset_index()
+    pm25_summary.columns = ["Stasiun", "Rata-rata PM2.5"]
+    st.write("### Rata-rata PM2.5 di Setiap Stasiun")
+    st.dataframe(pm25_summary)
+
+    # Tambahkan penjelasan di bawah tabel
+    st.write("### 📌 Analisis Distribusi PM2.5 Berdasarkan Lokasi")
+    st.write("""
+    Data menunjukkan bahwa distribusi PM2.5 bervariasi di berbagai stasiun pemantauan di Beijing. Beberapa poin penting dari analisis ini adalah:
+
+    **1. Variasi Polusi di Berbagai Stasiun**  
+    - Stasiun tertentu memiliki konsentrasi PM2.5 lebih tinggi karena faktor geografis dan aktivitas manusia seperti industri dan transportasi.
+    - Stasiun di pusat kota umumnya mencatat polusi yang lebih tinggi dibandingkan daerah pinggiran.
+
+    **2. Pengaruh Cuaca terhadap Polusi Udara**  
+    - **Curah Hujan (RAIN)**: Hujan dapat membantu membersihkan udara dari partikel polutan, sehingga daerah dengan curah hujan tinggi cenderung memiliki tingkat PM2.5 yang lebih rendah.
+    - **Kecepatan Angin (WSPM)**: Angin dapat menyebarkan polusi dan mengurangi konsentrasi lokal PM2.5, terutama di daerah terbuka.
+
+    **3. Polusi Udara dan Tren Musiman**  
+    - Selama musim dingin, polusi udara cenderung lebih tinggi karena udara yang lebih stabil dan peningkatan emisi dari sistem pemanas.
+    - Pada musim hujan, polusi cenderung menurun karena efek pencucian atmosfer oleh curah hujan.
+
+    **4. Kesimpulan dan Tindakan**  
+    - Untuk mengurangi polusi udara, diperlukan lebih banyak ruang hijau, pengurangan emisi kendaraan, serta kebijakan yang mendukung kualitas udara bersih.
+    - Data ini dapat digunakan untuk merancang strategi mitigasi yang lebih efektif di area dengan tingkat polusi tinggi.
+    """)
+
