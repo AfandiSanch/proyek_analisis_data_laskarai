@@ -4,7 +4,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import geopandas as gpd
-import os
 from sklearn.preprocessing import KBinsDiscretizer
 
 # URL dataset
@@ -17,17 +16,21 @@ urls = {
 
 # Fungsi untuk memuat data
 @st.cache_data
-def load_data(url):
+def load_data(url, station):
     df = pd.read_csv(url)
     df.dropna(inplace=True)
-    df['datetime'] = pd.to_datetime(df[['year', 'month', 'day', 'hour']])
+
+    # Perbaikan format datetime
+    df['datetime'] = pd.to_datetime(
+        df['year'].astype(str) + '-' + df['month'].astype(str) + '-' + df['day'].astype(str) + ' ' + df['hour'].astype(str) + ':00:00'
+    )
+
+    df['station'] = station  # Menambahkan kolom station
     return df
 
-# Memuat semua dataset
-data_frames = {station: load_data(url) for station, url in urls.items()}
-
-data_combined = pd.concat(data_frames.values(), ignore_index=True)
-data_combined['station'] = np.repeat(list(data_frames.keys()), [len(df) for df in data_frames.values()])
+# Memuat semua dataset dengan nama station masing-masing
+data_frames = [load_data(url, station) for station, url in urls.items()]
+data_combined = pd.concat(data_frames, ignore_index=True)
 
 # Sidebar Navigasi
 st.sidebar.title("Navigasi")
@@ -47,6 +50,7 @@ elif page == "Statistik Deskriptif":
 # Visualisasi
 elif page == "Visualisasi":
     tab1, tab2 = st.tabs(["📈 Tren Polusi", "☔ Scatter Plot Curah Hujan & Angin"])
+    
     with tab1:
         st.write("### Tren Polusi Udara (PM2.5 & PM10)")
         fig, ax = plt.subplots(figsize=(14, 7))
@@ -56,10 +60,14 @@ elif page == "Visualisasi":
         plt.ylabel("Konsentrasi (µg/m³)")
         plt.xticks(rotation=45)
         st.pyplot(fig)
+
     with tab2:
         st.write("### Pengaruh Curah Hujan & Kecepatan Angin")
         fig, ax = plt.subplots(figsize=(12, 6))
-        sns.scatterplot(data=data_combined, x='RAIN', y='PM2.5', hue='WSPM', palette='viridis', size='WSPM', sizes=(20, 200), alpha=0.6, ax=ax)
+        sns.scatterplot(
+            data=data_combined, x='RAIN', y='PM2.5', hue='WSPM',
+            palette='viridis', size='WSPM', sizes=(20, 200), alpha=0.6, ax=ax
+        )
         plt.xlabel("Curah Hujan (mm)")
         plt.ylabel("PM2.5 (µg/m³)")
         st.pyplot(fig)
@@ -67,17 +75,20 @@ elif page == "Visualisasi":
 # Analisis RFM
 elif page == "Analisis RFM":
     st.title("📊 Analisis Recency, Frequency, Monetary (RFM)")
+
     data_combined['date'] = data_combined['datetime'].dt.date
     rfm = data_combined.groupby('station').agg(
         Recency=('date', lambda x: (data_combined['date'].max() - x.max()).days),
         Frequency=('PM2.5', 'count'),
         Monetary=('PM2.5', 'mean')
     ).reset_index()
+
     st.dataframe(rfm)
 
 # Peta PM2.5
 elif page == "Peta PM2.5":
     st.title("🌍 Distribusi PM2.5 berdasarkan Lokasi")
+
     locations = {
         'station': list(urls.keys()),
         'latitude': [39.99, 40.00, 39.95, 39.93],
@@ -86,10 +97,13 @@ elif page == "Peta PM2.5":
     locations_df = pd.DataFrame(locations)
     data_geo = data_combined.groupby('station').agg({'PM2.5': 'mean'}).reset_index()
     data_geo = data_geo.merge(locations_df, on='station')
+
     gdf = gpd.GeoDataFrame(data_geo, geometry=gpd.points_from_xy(data_geo.longitude, data_geo.latitude))
 
-    shapefile_path = r"\\110m_cultural\\ne_110m_admin_0_countries.shp"
-    if os.path.exists(shapefile_path):
+    # Gantilah dengan path shapefile lokal jika ada
+    shapefile_path = "path/to/local_shapefile/ne_110m_admin_0_countries.shp"
+
+    if shapefile_path and gpd.io.file.exists(shapefile_path):
         world = gpd.read_file(shapefile_path)
         fig, ax = plt.subplots(figsize=(10, 10))
         world.boundary.plot(ax=ax, linewidth=1, color="black")
@@ -98,4 +112,5 @@ elif page == "Peta PM2.5":
         plt.ylabel("Latitude")
         st.pyplot(fig)
     else:
-        st.error(f"File Shapefile tidak ditemukan: {shapefile_path}. Pastikan path benar!")
+        st.error("File Shapefile tidak ditemukan. Pastikan Anda menggunakan path lokal yang benar!")
+
