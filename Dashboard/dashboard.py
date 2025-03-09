@@ -4,10 +4,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import geopandas as gpd
+import folium
+from streamlit_folium import folium_static
 import os
 from sklearn.preprocessing import KBinsDiscretizer
 
-# URL dataset
+# URL dataset kualitas udara
 urls = {
     "Aotizhongxin": "https://raw.githubusercontent.com/AfandiSanch/proyek_analisis_data_laskarai/6ecd78a38c9ce4a2101f98edffc5f43daa34e38c/Data%20Air%20Quality/PRSA_Data_Aotizhongxin_20130301-20170228.csv",
     "Changping": "https://raw.githubusercontent.com/AfandiSanch/proyek_analisis_data_laskarai/6ecd78a38c9ce4a2101f98edffc5f43daa34e38c/Data%20Air%20Quality/PRSA_Data_Changping_20130301-20170228.csv",
@@ -25,7 +27,6 @@ def load_data(url):
 
 # Memuat semua dataset
 data_frames = {station: load_data(url) for station, url in urls.items()}
-
 data_combined = pd.concat(data_frames.values(), ignore_index=True)
 data_combined['station'] = np.repeat(list(data_frames.keys()), [len(df) for df in data_frames.values()])
 
@@ -78,6 +79,7 @@ elif page == "Analisis RFM":
 # Peta PM2.5
 elif page == "Peta PM2.5":
     st.title("🌍 Distribusi PM2.5 berdasarkan Lokasi")
+
     locations = {
         'station': list(urls.keys()),
         'latitude': [39.99, 40.00, 39.95, 39.93],
@@ -86,16 +88,32 @@ elif page == "Peta PM2.5":
     locations_df = pd.DataFrame(locations)
     data_geo = data_combined.groupby('station').agg({'PM2.5': 'mean'}).reset_index()
     data_geo = data_geo.merge(locations_df, on='station')
+
+    # Konversi ke GeoDataFrame
     gdf = gpd.GeoDataFrame(data_geo, geometry=gpd.points_from_xy(data_geo.longitude, data_geo.latitude))
 
-    shapefile_path = r"C:\\Users\\Master Sanch\\3D Objects\\Proyek Akhir\\Proyek Analisis Data\\110m_cultural\\ne_110m_admin_0_countries.shp"
+    # Path ke shapefile
+    shapefile_path = "shapefile/ne_110m_admin_0_countries.shp"
+
+    # Pastikan file tersedia
     if os.path.exists(shapefile_path):
         world = gpd.read_file(shapefile_path)
-        fig, ax = plt.subplots(figsize=(10, 10))
-        world.boundary.plot(ax=ax, linewidth=1, color="black")
-        gdf.plot(column='PM2.5', ax=ax, legend=True, cmap='OrRd', markersize=100)
-        plt.xlabel("Longitude")
-        plt.ylabel("Latitude")
-        st.pyplot(fig)
     else:
-        st.error(f"File Shapefile tidak ditemukan: {shapefile_path}. Pastikan path benar!")
+        world = gpd.read_file(gpd.datasets.get_path('naturalearth_lowres'))
+
+    # Buat peta interaktif menggunakan Folium
+    m = folium.Map(location=[39.95, 116.30], zoom_start=10)
+
+    # Tambahkan marker dengan ukuran dan warna berdasarkan PM2.5
+    for _, row in gdf.iterrows():
+        folium.CircleMarker(
+            location=[row['latitude'], row['longitude']],
+            radius=row['PM2.5'] / 5,  # Ukuran proporsional
+            popup=f"{row['station']}: {row['PM2.5']:.2f} µg/m³",
+            color="red",
+            fill=True,
+            fill_color="red",
+            fill_opacity=0.6,
+        ).add_to(m)
+
+    folium_static(m)
