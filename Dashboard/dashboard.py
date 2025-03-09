@@ -36,14 +36,24 @@ page = st.sidebar.radio("Pilih Halaman:", ["Home", "Statistik Deskriptif", "Visu
 
 # Home
 if page == "Home":
-    st.title("📊 Proyek Analisis Data: Air Quality Dataset")
-    st.write("### Data (5 baris per station)")
+    st.title("📊 Analisis Kualitas Udara Beijing")
+    st.write("### Contoh Data (5 baris per station)")
     
     # Ambil 5 baris per station
     sample_data = data_combined.groupby('station').head(5).reset_index(drop=True)
     
     st.dataframe(sample_data)
 
+    # Tambahkan penjelasan dan pertanyaan
+    st.write("### 🔍 Analisis Polusi Udara")
+    st.write("""
+    Data di atas menunjukkan contoh pengukuran kualitas udara dari berbagai stasiun pemantauan di Beijing.
+    Polusi udara diukur berdasarkan parameter PM2.5 dan PM10, yang sering dipengaruhi oleh faktor cuaca seperti curah hujan dan kecepatan angin.
+    
+    **Pertanyaan Analisis:**
+    1. Bagaimana tren polusi udara (PM2.5, PM10) dari waktu ke waktu di masing-masing stasiun?
+    2. Bagaimana pengaruh curah hujan (RAIN) dan kecepatan angin (WSPM) terhadap tingkat polusi udara (PM2.5) di seluruh stasiun?
+    """)
 
 # Statistik Deskriptif
 elif page == "Statistik Deskriptif":
