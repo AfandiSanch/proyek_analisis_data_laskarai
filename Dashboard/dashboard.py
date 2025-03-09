@@ -81,6 +81,8 @@ elif page == "Statistik Deskriptif":
 # Visualisasi
 elif page == "Visualisasi":
     tab1, tab2 = st.tabs(["📈 Tren Polusi", "☔ Scatter Plot Curah Hujan & Angin"])
+
+    # Tab 1: Tren Polusi Udara
     with tab1:
         st.write("### Tren Polusi Udara (PM2.5 & PM10)")
         fig, ax = plt.subplots(figsize=(14, 7))
@@ -90,13 +92,35 @@ elif page == "Visualisasi":
         plt.ylabel("Konsentrasi (µg/m³)")
         plt.xticks(rotation=45)
         st.pyplot(fig)
+
+        # Menambahkan penjelasan di bawah grafik
+        st.write("### 📌 Analisis Tren Polusi Udara")
+        st.write("""
+        - Tren polusi udara menunjukkan fluktuasi kadar PM2.5 dan PM10 dari waktu ke waktu di setiap stasiun pemantauan.
+        - Umumnya, kadar polutan cenderung meningkat pada musim dingin, terutama karena suhu lebih rendah dan atmosfer yang lebih stabil membuat polutan terperangkap di dekat permukaan tanah.
+        - Sebaliknya, polusi cenderung menurun selama musim hujan karena curah hujan membantu membersihkan udara dari partikel polutan.
+        - Lonjakan tertentu dalam tren polusi dapat dikaitkan dengan faktor eksternal seperti kabut asap, peningkatan aktivitas industri, atau meningkatnya jumlah kendaraan bermotor.
+        - Jika terdapat puncak atau lonjakan drastis pada tren, kemungkinan ada kejadian khusus seperti kebakaran hutan atau kondisi atmosfer yang tidak menguntungkan.
+        """)
+
+    # Tab 2: Scatter Plot Curah Hujan & Kecepatan Angin terhadap PM2.5
     with tab2:
-        st.write("### Pengaruh Curah Hujan & Kecepatan Angin")
+        st.write("### Pengaruh Curah Hujan & Kecepatan Angin terhadap PM2.5")
         fig, ax = plt.subplots(figsize=(12, 6))
         sns.scatterplot(data=data_combined, x='RAIN', y='PM2.5', hue='WSPM', palette='viridis', size='WSPM', sizes=(20, 200), alpha=0.6, ax=ax)
         plt.xlabel("Curah Hujan (mm)")
         plt.ylabel("PM2.5 (µg/m³)")
         st.pyplot(fig)
+
+        # Menambahkan penjelasan di bawah grafik
+        st.write("### 📌 Analisis Pengaruh Curah Hujan & Kecepatan Angin terhadap PM2.5")
+        st.write("""
+        - Scatter plot menunjukkan bahwa secara umum, semakin tinggi curah hujan, semakin rendah konsentrasi PM2.5. Hal ini karena hujan dapat membersihkan udara dengan menangkap partikel polusi dan membawanya turun ke tanah.
+        - Kecepatan angin juga berperan dalam mengurangi tingkat polusi udara. Angin yang lebih kuat membantu menyebarkan partikel polutan sehingga tidak terakumulasi di satu lokasi.
+        - Namun, jika ada titik-titik dengan curah hujan tinggi tetapi PM2.5 tetap tinggi, ini bisa menandakan adanya sumber polusi lain yang dominan, seperti emisi kendaraan, aktivitas industri, atau pembakaran biomassa.
+        - Dalam kondisi kecepatan angin rendah dan tidak ada hujan, polutan cenderung tetap berada di udara untuk waktu yang lebih lama, meningkatkan tingkat polusi.
+        - Dengan memahami hubungan ini, kebijakan pengendalian polusi dapat diarahkan dengan lebih baik, seperti meningkatkan penghijauan, mengurangi emisi industri, dan memantau kondisi cuaca untuk mengambil tindakan preventif.
+        """)
 
 # Analisis RFM
 elif page == "Analisis RFM":
