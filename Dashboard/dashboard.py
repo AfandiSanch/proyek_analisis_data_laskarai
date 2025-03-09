@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import geopandas as gpd
 from shapely.geometry import Point
-from sklearn.preprocessing import KBinsDiscretizer
 
 # URL dataset
 urls = {
@@ -19,10 +18,18 @@ urls = {
 @st.cache_data
 def load_data(url, station):
     df = pd.read_csv(url)
-    df.dropna(inplace=True)
 
-    # Format datetime
-    df['datetime'] = pd.to_datetime(df[['year', 'month', 'day', 'hour']].astype(str).agg('-'.join, axis=1))
+    # Hapus baris yang memiliki NaN di kolom tahun, bulan, hari, jam
+    df.dropna(subset=['year', 'month', 'day', 'hour'], inplace=True)
+
+    # Konversi ke datetime dengan error handling
+    df['datetime'] = pd.to_datetime(
+        df[['year', 'month', 'day', 'hour']].astype(str).agg('-'.join, axis=1), 
+        errors='coerce'
+    )
+
+    # Hapus data yang gagal dikonversi ke datetime
+    df.dropna(subset=['datetime'], inplace=True)
 
     df['station'] = station  # Tambahkan kolom station
     return df
@@ -49,12 +56,17 @@ elif page == "Statistik Deskriptif":
 # Visualisasi
 elif page == "Visualisasi":
     st.title("📊 Visualisasi Data")
-    fig, ax = plt.subplots(figsize=(14, 7))
-    sns.lineplot(data=data_combined, x='datetime', y='PM2.5', hue='station', marker='o', ax=ax)
-    plt.xticks(rotation=45)
-    plt.xlabel("Tanggal")
-    plt.ylabel("PM2.5 (µg/m³)")
-    st.pyplot(fig)
+    
+    # Pastikan 'PM2.5' tersedia sebelum memvisualisasikan
+    if 'PM2.5' in data_combined.columns:
+        fig, ax = plt.subplots(figsize=(14, 7))
+        sns.lineplot(data=data_combined, x='datetime', y='PM2.5', hue='station', marker='o', ax=ax)
+        plt.xticks(rotation=45)
+        plt.xlabel("Tanggal")
+        plt.ylabel("PM2.5 (µg/m³)")
+        st.pyplot(fig)
+    else:
+        st.warning("Kolom 'PM2.5' tidak ditemukan dalam dataset!")
 
 # Peta PM2.5
 elif page == "Peta PM2.5":
@@ -67,20 +79,28 @@ elif page == "Peta PM2.5":
         'longitude': [116.31, 116.35, 116.30, 116.28]
     }
     locations_df = pd.DataFrame(locations)
-    data_geo = data_combined.groupby('station').agg({'PM2.5': 'mean'}).reset_index()
-    data_geo = data_geo.merge(locations_df, on='station')
 
-    # Konversi ke GeoDataFrame
-    gdf = gpd.GeoDataFrame(data_geo, geometry=gpd.points_from_xy(data_geo.longitude, data_geo.latitude))
+    # Hanya gunakan data yang memiliki 'PM2.5'
+    if 'PM2.5' in data_combined.columns:
+        data_geo = data_combined.dropna(subset=['PM2.5']).groupby('station').agg({'PM2.5': 'mean'}).reset_index()
+        data_geo = data_geo.merge(locations_df, on='station')
 
-    # Gunakan dataset bawaan Geopandas
-    world = gpd.read_file(gpd.datasets.get_path("naturalearth_lowres"))
+        # Konversi ke GeoDataFrame
+        gdf = gpd.GeoDataFrame(data_geo, geometry=gpd.points_from_xy(data_geo.longitude, data_geo.latitude))
 
-    # Plot peta
-    fig, ax = plt.subplots(figsize=(10, 10))
-    world.boundary.plot(ax=ax, linewidth=1, color="black")
-    gdf.plot(column='PM2.5', ax=ax, legend=True, cmap='OrRd', markersize=100)
+        # Pastikan dataset peta tersedia
+        if "naturalearth_lowres" in gpd.datasets.available:
+            world = gpd.read_file(gpd.datasets.get_path("naturalearth_lowres"))
 
-    plt.xlabel("Longitude")
-    plt.ylabel("Latitude")
-    st.pyplot(fig)
+            # Plot peta
+            fig, ax = plt.subplots(figsize=(10, 10))
+            world.boundary.plot(ax=ax, linewidth=1, color="black")
+            gdf.plot(column='PM2.5', ax=ax, legend=True, cmap='OrRd', markersize=100)
+
+            plt.xlabel("Longitude")
+            plt.ylabel("Latitude")
+            st.pyplot(fig)
+        else:
+            st.error("Dataset peta tidak ditemukan. Pastikan GeoPandas terinstal dengan benar.")
+    else:
+        st.warning("Kolom 'PM2.5' tidak ditemukan dalam dataset!")
