@@ -1,5 +1,3 @@
-import os
-import requests
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -23,12 +21,10 @@ def load_data(url, station):
     df = pd.read_csv(url)
     df.dropna(inplace=True)
 
-    # Perbaikan format datetime
-    df['datetime'] = pd.to_datetime(
-        df['year'].astype(str) + '-' + df['month'].astype(str) + '-' + df['day'].astype(str) + ' ' + df['hour'].astype(str) + ':00:00'
-    )
+    # Format datetime
+    df['datetime'] = pd.to_datetime(df[['year', 'month', 'day', 'hour']].astype(str).agg('-'.join, axis=1))
 
-    df['station'] = station  # Menambahkan kolom station
+    df['station'] = station  # Tambahkan kolom station
     return df
 
 # Memuat semua dataset dengan nama station masing-masing
@@ -37,7 +33,7 @@ data_combined = pd.concat(data_frames, ignore_index=True)
 
 # Sidebar Navigasi
 st.sidebar.title("Navigasi")
-page = st.sidebar.radio("Pilih Halaman:", ["Home", "Statistik Deskriptif", "Visualisasi", "Analisis RFM", "Peta PM2.5"])
+page = st.sidebar.radio("Pilih Halaman:", ["Home", "Statistik Deskriptif", "Visualisasi", "Peta PM2.5"])
 
 # Home
 if page == "Home":
@@ -52,46 +48,19 @@ elif page == "Statistik Deskriptif":
 
 # Visualisasi
 elif page == "Visualisasi":
-    tab1, tab2 = st.tabs(["📈 Tren Polusi", "☔ Scatter Plot Curah Hujan & Angin"])
-    
-    with tab1:
-        st.write("### Tren Polusi Udara (PM2.5 & PM10)")
-        fig, ax = plt.subplots(figsize=(14, 7))
-        sns.lineplot(data=data_combined, x='datetime', y='PM2.5', hue='station', marker='o', ax=ax)
-        sns.lineplot(data=data_combined, x='datetime', y='PM10', hue='station', marker='x', linestyle='--', ax=ax)
-        plt.xlabel("Tanggal")
-        plt.ylabel("Konsentrasi (µg/m³)")
-        plt.xticks(rotation=45)
-        st.pyplot(fig)
-
-    with tab2:
-        st.write("### Pengaruh Curah Hujan & Kecepatan Angin")
-        fig, ax = plt.subplots(figsize=(12, 6))
-        sns.scatterplot(
-            data=data_combined, x='RAIN', y='PM2.5', hue='WSPM',
-            palette='viridis', size='WSPM', sizes=(20, 200), alpha=0.6, ax=ax
-        )
-        plt.xlabel("Curah Hujan (mm)")
-        plt.ylabel("PM2.5 (µg/m³)")
-        st.pyplot(fig)
-
-# Analisis RFM
-elif page == "Analisis RFM":
-    st.title("📊 Analisis Recency, Frequency, Monetary (RFM)")
-
-    data_combined['date'] = data_combined['datetime'].dt.date
-    rfm = data_combined.groupby('station').agg(
-        Recency=('date', lambda x: (data_combined['date'].max() - x.max()).days),
-        Frequency=('PM2.5', 'count'),
-        Monetary=('PM2.5', 'mean')
-    ).reset_index()
-
-    st.dataframe(rfm)
+    st.title("📊 Visualisasi Data")
+    fig, ax = plt.subplots(figsize=(14, 7))
+    sns.lineplot(data=data_combined, x='datetime', y='PM2.5', hue='station', marker='o', ax=ax)
+    plt.xticks(rotation=45)
+    plt.xlabel("Tanggal")
+    plt.ylabel("PM2.5 (µg/m³)")
+    st.pyplot(fig)
 
 # Peta PM2.5
 elif page == "Peta PM2.5":
-    st.title("🌍 Distribusi PM2.5 berdasarkan Lokasi")
+    st.title("🌍 Distribusi PM2.5")
 
+    # Koordinat lokasi
     locations = {
         'station': list(urls.keys()),
         'latitude': [39.99, 40.00, 39.95, 39.93],
@@ -101,27 +70,17 @@ elif page == "Peta PM2.5":
     data_geo = data_combined.groupby('station').agg({'PM2.5': 'mean'}).reset_index()
     data_geo = data_geo.merge(locations_df, on='station')
 
+    # Konversi ke GeoDataFrame
     gdf = gpd.GeoDataFrame(data_geo, geometry=gpd.points_from_xy(data_geo.longitude, data_geo.latitude))
 
-    # Gantilah dengan path shapefile lokal jika ada
-    shapefile_path = "https://raw.githubusercontent.com/AfandiSanch/proyek_analisis_data_laskarai/main/ne_110m_admin_0_countries.shp"
+    # Gunakan dataset bawaan Geopandas
+    world = gpd.read_file(gpd.datasets.get_path("naturalearth_lowres"))
 
-    def check_shapefile_exists(url):
-        """Memeriksa apakah shapefile tersedia"""
-        try:
-            response = requests.head(url)
-            return response.status_code == 200
-        except requests.RequestException:
-            return False
+    # Plot peta
+    fig, ax = plt.subplots(figsize=(10, 10))
+    world.boundary.plot(ax=ax, linewidth=1, color="black")
+    gdf.plot(column='PM2.5', ax=ax, legend=True, cmap='OrRd', markersize=100)
 
-    if check_shapefile_exists(shapefile_path):
-        world = gpd.read_file(shapefile_path)
-        fig, ax = plt.subplots(figsize=(10, 10))
-        world.boundary.plot(ax=ax, linewidth=1, color="black")
-        gdf.plot(column='PM2.5', ax=ax, legend=True, cmap='OrRd', markersize=100)
-        plt.xlabel("Longitude")
-        plt.ylabel("Latitude")
-        st.pyplot(fig)
-    else:
-        st.error("File Shapefile tidak ditemukan. Pastikan URL atau path lokal benar!")
-
+    plt.xlabel("Longitude")
+    plt.ylabel("Latitude")
+    st.pyplot(fig)
