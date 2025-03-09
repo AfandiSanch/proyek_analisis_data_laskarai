@@ -19,16 +19,16 @@ urls = {
 
 # Fungsi untuk memuat data
 @st.cache_data
-def load_data(url):
-    df = pd.read_csv(url)
+def load_data(url, station_name):
+    df = pd.read_csv(url, usecols=['year', 'month', 'day', 'hour', 'PM2.5', 'PM10', 'RAIN', 'WSPM'])
     df.dropna(inplace=True)
     df['datetime'] = pd.to_datetime(df[['year', 'month', 'day', 'hour']])
-    return df
+    df['station'] = station_name
+    return df[['datetime', 'station', 'PM2.5', 'PM10', 'RAIN', 'WSPM']]
 
-# Memuat semua dataset
-data_frames = {station: load_data(url) for station, url in urls.items()}
-data_combined = pd.concat(data_frames.values(), ignore_index=True)
-data_combined['station'] = np.repeat(list(data_frames.keys()), [len(df) for df in data_frames.values()])
+# Memuat semua dataset dan menggabungkan
+data_frames = [load_data(url, station) for station, url in urls.items()]
+data_combined = pd.concat(data_frames, ignore_index=True)
 
 # Sidebar Navigasi
 st.sidebar.title("Navigasi")
@@ -37,8 +37,8 @@ page = st.sidebar.radio("Pilih Halaman:", ["Home", "Statistik Deskriptif", "Visu
 # Home
 if page == "Home":
     st.title("📊 Analisis Kualitas Udara Beijing")
-    st.write("### Contoh Data")
-    st.dataframe(data_combined.head())
+    st.write("### Contoh Data (5 baris pertama dari dataset gabungan)")
+    st.dataframe(data_combined.head(5))
 
 # Statistik Deskriptif
 elif page == "Statistik Deskriptif":
