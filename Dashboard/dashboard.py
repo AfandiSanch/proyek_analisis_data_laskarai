@@ -93,7 +93,7 @@ elif page == "Peta PM2.5":
     gdf = gpd.GeoDataFrame(data_geo, geometry=gpd.points_from_xy(data_geo.longitude, data_geo.latitude))
 
     # Path ke shapefile
-    shapefile_path = "shapefile/ne_110m_admin_0_countries.shp"
+    shapefile_path = "110m_cultural/ne_110m_admin_0_countries.shp"
 
     # Pastikan file tersedia
     if os.path.exists(shapefile_path):
