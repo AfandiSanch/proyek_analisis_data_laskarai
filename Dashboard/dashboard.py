@@ -36,8 +36,8 @@ page = st.sidebar.radio("Pilih Halaman:", ["Home", "Statistik Deskriptif", "Visu
 
 # Home
 if page == "Home":
-    st.title("📊 Analisis Kualitas Udara Beijing")
-    st.write("### Contoh Data (5 baris per station)")
+    st.title("📊 Proyek Analisis Data: Air Quality Dataset")
+    st.write("### Data (5 baris per station)")
     
     # Ambil 5 baris per station
     sample_data = data_combined.groupby('station').head(5).reset_index(drop=True)
