@@ -203,6 +203,36 @@ elif page == "Peta PM2.5":
 
     folium_static(m)
 
+    # Menggunakan binning untuk mengelompokkan PM2.5
+    bins = [0, 12, 35, 55, 150, 250, np.inf]
+    labels = ['Good', 'Moderate', 'Unhealthy for Sensitive Groups', 'Unhealthy', 'Very Unhealthy', 'Hazardous']
+    data_combined['PM2.5_Category'] = pd.cut(data_combined['PM2.5'], bins=bins, labels=labels)
+
+    # Melihat distribusi kategori PM2.5
+    plt.figure(figsize=(10, 6))
+    sns.countplot(data=data_combined, x='PM2.5_Category', palette='Set2')
+    plt.title('Distribusi Kategori PM2.5')
+    plt.xlabel('Kategori PM2.5')
+    plt.ylabel('Jumlah Pengukuran')
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    st.pyplot(plt)
+
+    # Penjelasan Distribusi Kategori PM2.5
+    st.write("### 📌 Penjelasan Distribusi Kategori PM2.5")
+    st.write("""
+    Kategori PM2.5 dikelompokkan berdasarkan standar kualitas udara:
+
+    - **Good (0-12 µg/m³)** → Udara bersih, tidak berbahaya bagi kesehatan.
+    - **Moderate (12-35 µg/m³)** → Masih tergolong baik, tetapi bisa berdampak bagi kelompok sensitif.
+    - **Unhealthy for Sensitive Groups (35-55 µg/m³)** → Berisiko bagi anak-anak, lansia, dan penderita penyakit pernapasan.
+    - **Unhealthy (55-150 µg/m³)** → Udara mulai berbahaya bagi masyarakat umum.
+    - **Very Unhealthy (150-250 µg/m³)** → Risiko kesehatan serius bagi semua orang.
+    - **Hazardous (>250 µg/m³)** → Udara sangat berbahaya, semua orang bisa terkena dampaknya.
+
+    Grafik di atas menunjukkan jumlah pengukuran untuk setiap kategori PM2.5, membantu dalam memahami tingkat polusi udara yang terjadi di berbagai stasiun pemantauan.
+    """)
+    
     # Menampilkan tabel ringkasan PM2.5 per lokasi
     pm25_summary = data_combined.groupby("station")["PM2.5"].mean().reset_index()
     pm25_summary.columns = ["Stasiun", "Rata-rata PM2.5"]
